@@ -1,0 +1,225 @@
+FYP1_Preeshaa/
+│
+├── app/
+│   ├── app.py                      ← FastAPI app (backend API)
+│   ├── __init__.py                 ← makes this folder a package (can be empty)
+│   ├── utils.py                    ← helper functions (e.g., text preprocessing)
+│   └── requirements.txt            ← backend dependencies
+│
+├── model/
+│   ├── phishing_model.pkl          ← your trained RandomForest model
+│   ├── vectorizer.pkl              ← your TF-IDF vectorizer
+│
+├── data/
+│   ├── Good Email/                 ← your good (legitimate) training emails
+│   ├── Bad Email/                  ← your phishing training emails
+│   └── PhishTank Dataset URL.csv   ← optional external dataset
+│
+├── notebooks/
+│   └── training_script.py          ← your training code (the one you’ve written)
+│
+├── addin/
+│   ├── manifest.xml                ← manifest for Outlook Add-in
+│   ├── taskpane.html               ← main UI page for Outlook add-in
+│   ├── taskpane.js                 ← JavaScript that calls your FastAPI API
+│   ├── assets/                     ← icons, logos, CSS files for add-in UI
+│   └── package.json                ← Node.js project configuration
+│
+├── README.md                       ← description of your project
+└── .gitignore                      ← ignore build files / large datasets (optional)
+
+
+Perfect 👍 — you’re at the point where good **project organization** becomes crucial.
+Let’s build your **entire folder structure** step-by-step so your project is clean, easy to debug, and ready for deployment later.
+
+---
+
+# 🧩 PHISHING DETECTION SYSTEM — PROJECT STRUCTURE
+
+Here’s the **recommended folder layout** (for your local machine or VS Code workspace):
+
+```
+FYP1_Preeshaa/
+│
+├── app/
+│   ├── app.py                      ← FastAPI app (backend API)
+│   ├── __init__.py                 ← makes this folder a package (can be empty)
+│   ├── utils.py                    ← helper functions (e.g., text preprocessing)
+│   └── requirements.txt            ← backend dependencies
+│
+├── model/
+│   ├── phishing_model.pkl          ← your trained RandomForest model
+│   ├── vectorizer.pkl              ← your TF-IDF vectorizer
+│
+├── data/
+│   ├── Good Email/                 ← your good (legitimate) training emails
+│   ├── Bad Email/                  ← your phishing training emails
+│   └── PhishTank Dataset URL.csv   ← optional external dataset
+│
+├── notebooks/
+│   └── training_script.py          ← your training code (the one you’ve written)
+│
+├── addin/
+│   ├── manifest.xml                ← manifest for Outlook Add-in
+│   ├── taskpane.html               ← main UI page for Outlook add-in
+│   ├── taskpane.js                 ← JavaScript that calls your FastAPI API
+│   ├── assets/                     ← icons, logos, CSS files for add-in UI
+│   └── package.json                ← Node.js project configuration
+│
+├── README.md                       ← description of your project
+└── .gitignore                      ← ignore build files / large datasets (optional)
+```
+
+---
+
+## 🧠 Let’s break down each section:
+
+---
+
+### 🗂️ 1. **`model/`** — contains your trained artifacts
+
+These are the “brains” of your system.
+
+| File                 | Purpose                                            |
+| -------------------- | -------------------------------------------------- |
+| `phishing_model.pkl` | Your trained RandomForestClassifier                |
+| `vectorizer.pkl`     | Your TF-IDF vectorizer used for feature extraction |
+
+> 🔹 You already created these files in Step 1.2.
+> 🔹 Your FastAPI backend will load these during startup.
+
+---
+
+### ⚙️ 2. **`app/`** — your backend API (FastAPI)
+
+This is what your Outlook Add-in will communicate with.
+
+| File               | Purpose                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `app.py`           | The FastAPI server that loads the model and exposes `/predict` endpoint |
+| `utils.py`         | Optional helper functions (e.g., URL extraction, text cleaning)         |
+| `requirements.txt` | List of Python dependencies to recreate your backend environment        |
+
+Example `requirements.txt`:
+
+```
+fastapi
+uvicorn
+joblib
+scikit-learn
+pandas
+textblob
+beautifulsoup4
+```
+
+Run the backend locally:
+
+```bash
+cd app
+uvicorn app:app --reload
+```
+
+Then test in your browser:
+👉 [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+---
+
+### 🧠 3. **`notebooks/`** — for experimentation and training
+
+| File                 | Purpose                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| `training_script.py` | The full code you already wrote — trains and saves the model |
+
+You’ll use this only when retraining or improving your model.
+
+---
+
+### 📂 4. **`data/`** — for datasets
+
+| Subfolder/File              | Purpose                                  |
+| --------------------------- | ---------------------------------------- |
+| `Good Email/`               | Folder with all legitimate email samples |
+| `Bad Email/`                | Folder with phishing samples             |
+| `PhishTank Dataset URL.csv` | Optional CSV dataset (external data)     |
+
+Your training script reads data from here.
+
+---
+
+### 💌 5. **`addin/`** — your Outlook Add-in (frontend UI)
+
+| File            | Purpose                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| `manifest.xml`  | Registers your add-in with Outlook (defines buttons, permissions) |
+| `taskpane.html` | The main HTML for your add-in interface                           |
+| `taskpane.js`   | The JavaScript that calls your FastAPI `/predict` endpoint        |
+| `assets/`       | Icons and CSS for UI (16×16, 32×32, 80×80 icons etc.)             |
+| `package.json`  | Configuration for your add-in’s Node.js project                   |
+
+Run this project with:
+
+```bash
+npm start
+```
+
+and sideload into Outlook using:
+
+```bash
+npx office-addin-debugging sideload --app outlook
+```
+
+---
+
+### 📄 6. **`README.md`** — documentation
+
+Contains:
+
+* What your project does
+* How to install dependencies
+* How to train and run the API
+* How to test in Outlook
+
+---
+
+### 🧹 7. **`.gitignore`** — optional
+
+To ignore unnecessary files when using GitHub:
+
+```
+__pycache__/
+*.pkl
+*.csv
+*.xlsx
+node_modules/
+.env
+```
+
+---
+
+## 🧩 Summary Diagram
+
+```
+📁 FYP1_Preeshaa
+├── 📁 app
+│   ├── app.py
+│   ├── utils.py
+│   └── requirements.txt
+├── 📁 model
+│   ├── phishing_model.pkl
+│   └── vectorizer.pkl
+├── 📁 data
+│   ├── Good Email/
+│   ├── Bad Email/
+│   └── PhishTank Dataset URL.csv
+├── 📁 notebooks
+│   └── training_script.py
+├── 📁 addin
+│   ├── manifest.xml
+│   ├── taskpane.html
+│   ├── taskpane.js
+│   ├── assets/
+│   └── package.json
+├── README.md
+└── .gitignore
+
+

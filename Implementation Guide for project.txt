@@ -1,0 +1,264 @@
+Implementation Steps for the Final Year Project:
+
+| Step | Description                                                            |
+| ---- | ---------------------------------------------------------------------- |
+| 1    | Train and save your RandomForest model (`rf_model.pkl`) and vectorizer |
+| 2    | Create a Flask or FastAPI API endpoint for predictions                 |
+| 3    | Host the API online (e.g., Render, Railway, or local for testing)      |
+| 4    | Build Outlook Add-in using `yo office` generator                       |
+| 5    | Modify Add-in’s JavaScript to send email text to the API               |
+| 6    | Display prediction result with color coding                            |
+| 7    | Test with real Outlook emails                                          |
+| 8    | Package and publish the Add-in manifest for Outlook                    |                                                                                     
+
+
+
+Example system architechure:
++-----------------------------+
+| Outlook Client (User View)  |
+|  - Outlook Add-in (JS)      |
+|  - Displays Red/Green Label |
++-------------|---------------+
+              |
+              v
++-----------------------------+
+| Flask/FastAPI Backend (API) |
+|  - Receives email data      |
+|  - Loads trained RF model   |
+|  - Returns classification   |
++-------------|---------------+
+              |
+              v
++-----------------------------+
+| ML Model & Feature Extractor|
+|  - URL features             |
+|  - Text features (TF-IDF)   |
+|  - RandomForestClassifier   |
++-----------------------------+
+
+
+Awesome — since your RandomForest model is already trained, here’s a clear, **end-to-end path** to ship an Outlook-integrated phishing detector that marks emails red/green right inside Outlook.
+
+---
+
+# Step-by-step plan
+
+## 1) Package your model for inference (once)
+
+1. Save your model + any vectorizer/pipeline:
+
+   ```python
+   import joblib
+   joblib.dump(pipeline_or_vectorizer, "vectorizer.pkl")
+   joblib.dump(rf_model, "rf_model.pkl")
+   ```
+2. Freeze feature logic: whatever URL/text features you used in training must be reproduced exactly in inference (same tokenization, same URL parsing, same TF-IDF). Put that code in a single `features.py` so the server and future retrains stay in sync.
+
+## 2) Build a tiny inference API (FastAPI example)
+
+Create a minimal service that accepts `{subject, bodyHtml, bodyText, from, urls[]}` and returns `{label, score}`.
+
+```python
+# app.py
+from fastapi import FastAPI, Header, HTTPException
+from pydantic import BaseModel
+import joblib, re
+from bs4 import BeautifulSoup
+
+API_KEY = "change-me"  # move to ENV in prod
+app = FastAPI()
+vec = joblib.load("vectorizer.pkl")
+model = joblib.load("rf_model.pkl")
+
+class EmailIn(BaseModel):
+    subject: str = ""
+    bodyHtml: str = ""
+    bodyText: str = ""
+    sender: str = ""
+    urls: list[str] = []
+
+def extract_text(html, plain):
+    if plain: return plain
+    if html:
+        try: return BeautifulSoup(html, "html.parser").get_text(" ")
+        except: return html
+    return ""
+
+@app.post("/predict")
+def predict(email: EmailIn, x_api_key: str = Header(default="")):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="bad key")
+    text = (email.subject + " " + extract_text(email.bodyHtml, email.bodyText) +
+            " " + " ".join(email.urls))
+    X = vec.transform([text])
+    proba = getattr(model, "predict_proba", None)
+    score = float(proba(X)[0,1]) if proba else float(model.predict(X)[0])
+    label = "phishing" if score >= 0.5 else "legitimate"
+    return {"label": label, "score": round(score, 4)}
+```
+
+Add CORS and run (or Dockerize). For a student deployment, **Render/Railway/Azure App Service** are fine. Make sure it’s HTTPS and set CORS to your add-in origin.
+
+> Tip: keep the request <1–2 MB and response fast (<300s is the hard timeout for Outlook event runtimes). ([Microsoft Learn][1])
+
+## 3) Create the Outlook Add-in (Task Pane + Message Read)
+
+1. Install tooling:
+
+   ```bash
+   npm i -g yo generator-office office-addin-debugging office-addin-cli
+   ```
+2. Scaffold:
+
+   ```bash
+   yo office
+   # Choose: Outlook Add-in → Task pane → JavaScript (or React/TS if you prefer)
+   ```
+3. In **manifest.xml**:
+
+   * Require mailbox v1.5+ (for **ItemChanged** event).
+   * Add **SupportsPinning** so your pane stays open while the user clicks through messages. ([Microsoft Learn][2])
+   * Ask for **ReadWriteMailbox** *only if you’ll set Outlook categories* (color tags). Otherwise **ReadItem** is enough. ([Microsoft Learn][3])
+
+   Minimal bits you’ll add under `VersionOverrides`:
+
+   ```xml
+   <Requirements>
+     <Sets DefaultMinVersion="1.5">
+       <Set Name="Mailbox" MinVersion="1.5"/>
+     </Sets>
+   </Requirements>
+
+   <Hosts>
+     <Host Name="Mailbox"/>
+   </Hosts>
+
+   <ExtensionPoints>
+     <ExtensionPoint xsi:type="MessageReadCommandSurface">
+       <OfficeTab id="TabDefault">
+         <Group id="phishGroup" label="Phish Guard">
+           <Control xsi:type="Button" id="phishPane"
+                    label="Open Classifier" icon="...16/32/80..."
+                    >
+             <Action xsi:type="ShowTaskpane">
+               <SourceLocation resid="Taskpane.Url"/>
+               <SupportsPinning>true</SupportsPinning>
+             </Action>
+           </Control>
+         </Group>
+       </OfficeTab>
+     </ExtensionPoint>
+   </ExtensionPoints>
+   ```
+
+   > Pinned task panes + **ItemChanged** let you react automatically as the user selects different emails (no extra clicks). ([Microsoft Learn][4])
+
+## 4) Wire the task pane to classify each selected email
+
+In `taskpane.js` (or React component):
+
+```javascript
+let API = "https://your-api/predict";
+let API_KEY = "change-me";
+
+async function classifyCurrentItem(item) {
+  // Subject & sender (read mode)
+  const subject = item.subject || "";
+  const sender = (item.from && item.from.emailAddress) ? item.from.emailAddress : "";
+  // Body text
+  const bodyText = await new Promise(resolve =>
+    item.body.getAsync("text", r => resolve(r.status === Office.AsyncResultStatus.Succeeded ? r.value : ""))
+  );
+  // Body HTML for URL scraping (optional)
+  const bodyHtml = await new Promise(resolve =>
+    item.body.getAsync("html", r => resolve(r.status === Office.AsyncResultStatus.Succeeded ? r.value : ""))
+  );
+  // Naive URL extraction
+  const urls = Array.from(bodyHtml.matchAll(/https?:\/\/[^\s"'<>]+/gi)).map(m => m[0]);
+
+  const res = await fetch(API, {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "X-API-Key": API_KEY},
+    body: JSON.stringify({subject, bodyHtml, bodyText, sender, urls})
+  });
+  const {label, score} = await res.json();
+  renderBadge(label, score);           // update UI
+  await maybeApplyCategory(label);     // optional: color category
+}
+
+function renderBadge(label, score) {
+  const el = document.getElementById("result");
+  el.textContent = `${label.toUpperCase()} (${score})`;
+  el.style.color = label === "phishing" ? "red" : "green";
+}
+
+Office.onReady(() => {
+  const first = Office.context.mailbox.item;
+  classifyCurrentItem(first); // initial
+  // Re-classify whenever selection changes (pane must be pinned)
+  Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, () => {
+    classifyCurrentItem(Office.context.mailbox.item);
+  });
+});
+```
+
+* Getting the message body via `item.body.getAsync(...)` is supported in read mode. ([Microsoft Learn][5])
+* **ItemChanged** fires when a *different* item is selected while the task pane is pinned. ([Microsoft Learn][4])
+
+## 5) (Optional) Apply Outlook color **Categories** (true red/green chips)
+
+If you want the **native colored chip** in Outlook (not just your pane UI):
+
+1. Keep/read the user’s **master categories** or create your own (e.g., “Phishing 🔴”, “Legitimate 🟢”).
+2. Apply/remove categories on the current item after prediction.
+
+> Requires **ReadWriteMailbox** permission in the manifest. ([Microsoft Learn][3])
+
+Docs & sample API calls for categories are here. ([Microsoft Learn][3])
+
+> Note: category APIs are strongest in read mode; compose/mobile have limitations. ([Microsoft Learn][6])
+
+## 6) Run & sideload for testing
+
+* Start the dev server:
+
+  ```bash
+  npm start
+  ```
+* Sideload in Outlook for the Web or new Outlook/Windows:
+
+  ```bash
+  npx office-addin-debugging sideload --app outlook
+  ```
+* Microsoft’s quickstart covers the full sideload flow if you get stuck. ([Microsoft Learn][7])
+
+## 7) Pin the pane so it auto-classifies as you click through emails
+
+Open your add-in once, then **pin** it (pin icon). From then on, as you select different messages, the **ItemChanged** handler runs and you update the label automatically. ([Microsoft Support][8])
+
+## 8) (Optional, advanced) Server-side auto-label on **arrival**
+
+If you want messages to be tagged **before** the user even opens Outlook:
+
+* Create a Microsoft Graph **webhook subscription** to `/me/mailFolders('Inbox')/messages`.
+* When Graph notifies your webhook of a new message, pull it, run your model on the server, then set a category (or add a custom header) back via Graph. ([Microsoft Learn][9])
+
+> There is no general “run code on every read” event yet (only specific preview events); the **pinned task pane + ItemChanged** pattern is the reliable way to classify as users browse their inbox today. ([Microsoft Learn][1])
+
+---
+
+## Quick checklist (copy this into your README)
+
+* [ ] Save `vectorizer.pkl` & `rf_model.pkl`
+* [ ] Build FastAPI endpoint `/predict` (CORS, API key)
+* [ ] Deploy API (HTTPS URL)
+* [ ] `yo office` → Outlook Task Pane add-in
+* [ ] Manifest: Mailbox ≥1.5, SupportsPinning, (optional) ReadWriteMailbox
+* [ ] Task pane: `getAsync` body, call `/predict`, show red/green badge
+* [ ] (Optional) Apply Outlook Categories after prediction
+* [ ] Sideload and **Pin** the pane
+* [ ] Demo video + accuracy report
+
+
+
+
