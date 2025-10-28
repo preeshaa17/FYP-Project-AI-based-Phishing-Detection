@@ -6,8 +6,8 @@ from bs4 import BeautifulSoup
 app = FastAPI(title="Phishing Detection API")
 
 # Load your trained model and vectorizer
-model = joblib.load("model/phishing_model.pkl")
-vectorizer = joblib.load("model/vectorizer.pkl")
+model = joblib.load("rf_model.pkl")
+vectorizer = joblib.load("vectorizer.pkl")
 
 API_KEY = "change-me"  # Optional: Add basic security if you want
 
