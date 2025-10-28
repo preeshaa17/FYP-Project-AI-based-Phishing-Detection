@@ -3,4 +3,3 @@ model/
 __pycache__/
 venv/
 .venv/
-addin/
