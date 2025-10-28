@@ -1,0 +1,21 @@
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:type="TaskPaneApp">
+  <Id>YOUR-ADDIN-ID</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Preeshaa</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="AI-Based Phishing Detector"/>
+  <Description DefaultValue="Scan emails for phishing using AI."/>
+  <IconUrl DefaultValue="https://your-server.com/assets/icon.png"/>
+
+  <Hosts>
+    <Host Name="Mailbox"/>
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteItem</Permissions>
+</OfficeApp>
