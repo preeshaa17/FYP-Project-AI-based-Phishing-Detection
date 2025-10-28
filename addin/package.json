@@ -1,0 +1,10 @@
+{
+  "name": "phishing-detector-addin",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "office-addin-debugging start manifest.xml"
+  },
+  "dependencies": {
+    "office-addin-debugging": "^6.0.0"
+  }
+}
