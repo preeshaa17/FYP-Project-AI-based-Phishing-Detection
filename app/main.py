@@ -1,13 +1,17 @@
 from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 import joblib
+import os
 from bs4 import BeautifulSoup
 
 app = FastAPI(title="Phishing Detection API")
 
 # Load your trained model and vectorizer
-model = joblib.load("phishing_model.pkl")
-vectorizer = joblib.load("vectorizer.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "../model")
+
+model = joblib.load(os.path.join(MODEL_DIR, "phishing_model.pkl"))
+vectorizer = joblib.load(os.path.join(MODEL_DIR, "vectorizer.pkl"))
 
 API_KEY = "change-me"  # Optional: Add basic security if you want
 
