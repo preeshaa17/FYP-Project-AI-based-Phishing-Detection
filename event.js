@@ -1,28 +1,28 @@
-function onMessageReceived(event) {
-  Office.context.mailbox.item.body.getAsync("text", async (result) => {
-    if (result.status === Office.AsyncResultStatus.Succeeded) {
-      const emailBody = result.value;
+async function onMessageReceived(event) {
+  try {
+    const item = Office.context.mailbox.item;
 
-      // Send email content to backend
-      const response = await fetch("https://your-api.onrender.com/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: emailBody })
-      });
+    // Get email body (plain text)
+    item.body.getAsync("text", async (result) => {
+      if (result.status === Office.AsyncResultStatus.Succeeded) {
+        const emailBody = result.value;
 
-      const data = await response.json();
+        // Send to FastAPI backend for prediction
+        const response = await fetch("https://your-api.onrender.com/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: emailBody })
+        });
 
-      // Update UI
-      const resultElement = document.getElementById("result");
-      if (data.prediction === "phishing") {
-        resultElement.innerHTML = "⚠️ Phishing Detected!";
-        resultElement.style.backgroundColor = "red";
-      } else {
-        resultElement.innerHTML = "✅ Safe Email";
-        resultElement.style.backgroundColor = "green";
+        const data = await response.json();
+
+        // Pass result to UI display (taskpane.js)
+        Office.context.ui.messageParent(JSON.stringify(data));
       }
-    }
-  });
-
-  event.completed(); // Important to signal event completion
+    });
+  } catch (error) {
+    console.error("Error scanning email:", error);
+  } finally {
+    event.completed(); // important!
+  }
 }
