@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import joblib
 import os
 from bs4 import BeautifulSoup
+from typing import List
 
 app = FastAPI(title="Phishing Detection API")
 
@@ -21,7 +22,7 @@ class EmailIn(BaseModel):
     bodyHtml: str = ""
     bodyText: str = ""
     sender: str = ""
-    urls: list[str] = []
+    urls: List[str] = []
 
 def extract_text(html, plain):
     if plain:
