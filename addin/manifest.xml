@@ -1,21 +1,20 @@
-<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
-            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:type="TaskPaneApp">
-  <Id>YOUR-ADDIN-ID</Id>
-  <Version>1.0.0.0</Version>
-  <ProviderName>Preeshaa</ProviderName>
-  <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="AI-Based Phishing Detector"/>
-  <Description DefaultValue="Scan emails for phishing using AI."/>
-  <IconUrl DefaultValue="https://your-server.com/assets/icon.png"/>
-
-  <Hosts>
-    <Host Name="Mailbox"/>
-  </Hosts>
-
-  <DefaultSettings>
-    <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
-  </DefaultSettings>
-
-  <Permissions>ReadWriteItem</Permissions>
-</OfficeApp>
+<ExtensionPoint xsi:type="MessageReadCommandSurface">
+  <OfficeTab id="TabDefault">
+    <Group id="MessageReadGroup">
+      <Label resid="GroupLabel"/>
+      <Control xsi:type="Button" id="TaskpaneButton">
+        <Label resid="ButtonLabel"/>
+        <Icon>
+          <bt:Image size="16" resid="Icon.16x16"/>
+        </Icon>
+        <Action xsi:type="ShowTaskpane">
+          <SourceLocation resid="TaskpaneUrl"/>
+        </Action>
+      </Control>
+    </Group>
+  </OfficeTab>
+  <!-- Automatically trigger when email is read -->
+  <EventHandlers>
+    <EventHandler type="ItemChanged" functionName="onMessageReceived" />
+  </EventHandlers>
+</ExtensionPoint>
