@@ -3,3 +3,8 @@ model/
 __pycache__/
 venv/
 .venv/
+node_modules/
+addin/node_modules/
+# Ignore specific icons
+/addin/assets/icon-32.png
+/addin/assets/icon12.png
