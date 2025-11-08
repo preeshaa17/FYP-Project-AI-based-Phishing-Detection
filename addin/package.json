@@ -1,10 +1,26 @@
 {
   "name": "phishing-detector-addin",
   "version": "1.0.0",
+  "description": "An Outlook add-in that detects phishing attempts using AI.",
+  "author": "Universiti Teknologi PETRONAS",
+  "license": "MIT",
+
   "scripts": {
-    "start": "office-addin-debugging start manifest.xml"
+    "start": "office-addin-debugging start manifest.xml",
+    "start:web": "webpack serve --config webpack.config.js"
   },
+
   "dependencies": {
     "office-addin-debugging": "^6.0.0"
+  },
+
+  "devDependencies": {
+    "office-addin-lint": "^3.0.3",
+    "office-addin-manifest": "^2.0.3",
+    "office-addin-dev-certs": "^2.0.3",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4",
+    "copy-webpack-plugin": "^11.0.0"
   }
 }

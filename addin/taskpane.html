@@ -1,11 +1,22 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Phishing Detector</title>
-    <link rel="stylesheet" href="assets/style.css">
+    <meta charset="utf-8" />
+    <title>AI-Based Phishing Detector</title>
+
+    <!-- Office.js API -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <!-- Optional CSS -->
+    <link rel="stylesheet" href="assets/style.css" />
   </head>
+
   <body>
-    <div id="result" class="status-box">Waiting for emails...</div>
-    <script src="event.js"></script>
+    <h2>AI-Based Phishing Detector</h2>
+    <div id="result" class="status-box">Waiting for email...</div>
+    <button id="scanBtn">🔍 Scan Email</button>
+
+    <!-- Main JS -->
+    <script src="taskpane.js"></script>
   </body>
 </html>
