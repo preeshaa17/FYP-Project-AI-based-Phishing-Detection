@@ -6,7 +6,7 @@
   "license": "MIT",
 
   "scripts": {
-    "start": "office-addin-debugging start manifest.xml",
+    "start": "office-addin-debugging start manifest.xml --app outlook",
     "start:web": "webpack serve --config webpack.config.js"
   },
 

@@ -1,46 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
            xsi:type="MailApp">
 
-  <Id>ffd0826d-3295-4ce7-b991-104b7961e506</Id>
-  <Version>1.0.0.0</Version>
-  <ProviderName>Universiti Teknologi PETRONAS</ProviderName>
-  <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="AI-Based Phishing Detector" />
-  <Description DefaultValue="An Outlook add-in that detects phishing attempts using AI." />
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-64.png" />
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-128.png" />
-  <SupportUrl DefaultValue="https://www.utp.edu.my" />
+    <Id>6bc05132-70aa-485a-bd07-8e3bd43e4e6a</Id>
+    
+    <Version>1.0.0.0</Version>
+    <ProviderName>Universiti Teknologi PETRONAS</ProviderName>
+    <DefaultLocale>en-US</DefaultLocale>
+    <DisplayName DefaultValue="AI-Based Phishing Detector" />
+    <Description DefaultValue="An Outlook add-in that detects phishing attempts using AI." />
+    <IconUrl DefaultValue="https://localhost:8080/assets/icon-64.png" />
+    <HighResolutionIconUrl DefaultValue="https://localhost:8080/assets/icon-128.png" />
+    <SupportUrl DefaultValue="https://www.utp.edu.my" />
 
-  <AppDomains>
-    <AppDomain>https://localhost:3000</AppDomain>
-  </AppDomains>
+    <AppDomains>
+        <AppDomain>https://localhost:8080</AppDomain>
+        <AppDomain>https://localhost:5000</AppDomain>
+    </AppDomains>
 
-  <Hosts>
-    <Host Name="Mailbox" />
-  </Hosts>
+    <Hosts>
+        <Host Name="Mailbox" />
+    </Hosts>
 
-  <Requirements>
-    <Sets DefaultMinVersion="1.1">
-      <Set Name="Mailbox" />
-    </Sets>
-  </Requirements>
+    <Requirements>
+        <Sets DefaultMinVersion="1.1">
+            <Set Name="Mailbox" />
+        </Sets>
+    </Requirements>
 
-  <FormSettings>
-    <Form xsi:type="ItemRead">
-      <DesktopSettings>
-        <!-- When reading a message, load the function file -->
-        <SourceLocation DefaultValue="https://localhost:3000/function-file.html" />
-        <RequestedHeight>350</RequestedHeight>
-      </DesktopSettings>
-    </Form>
-  </FormSettings>
+    <FormSettings>
+        <Form xsi:type="ItemRead">
+            <DesktopSettings>
+                <SourceLocation DefaultValue="https://localhost:8080/taskpane.html" />
+                <RequestedHeight>350</RequestedHeight>
+            </DesktopSettings>
+        </Form>
+    </FormSettings>
 
-  <Permissions>ReadItem</Permissions>
+    <Permissions>ReadItem</Permissions>
 
-  <Rule xsi:type="RuleCollection" Mode="Or">
     <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
-  </Rule>
+
+    <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+      <Requirements>
+        <bt:Sets DefaultMinVersion="1.1">
+          <bt:Set Name="Mailbox" />
+        </bt:Sets>
+      </Requirements>
+      <Hosts>
+        <Host xsi:type="MailHost">
+          <DesktopFormFactor>
+            <ExtensionPoint xsi:type="MessageReadCommandSurface">
+              <OfficeTab id="TabDefault">
+                <Group id="msgReadGroup">
+                  <Label resid="groupLabel" />
+                  <Control xsi:type="Button" id="msgReadScanButton">
+                    <Label resid="buttonLabel" />
+                    <Supertip>
+                      <Title resid="buttonTitle" />
+                      <Description resid="buttonDescription" />
+                    </Supertip>
+                    <Icon>
+                      <bt:Image size="16" resid="icon16" />
+                      <bt:Image size="32" resid="icon32" />
+                      <bt:Image size="80" resid="icon80" />
+                    </Icon>
+                    <Action xsi:type="ShowTaskpane">
+                      <SourceLocation resid="taskpaneUrl" />
+                    </Action>
+                  </Control>
+                </Group>
+              </OfficeTab>
+            </ExtensionPoint>
+          </DesktopFormFactor>
+        </Host>
+      </Hosts>
+      
+      <Resources>
+        <bt:Images>
+          <bt:Image id="icon16" DefaultValue="https://localhost:8080/assets/icon-16.png" />
+          <bt:Image id="icon32" DefaultValue="https://localhost:8080/assets/icon-32.png" />
+          <bt:Image id="icon80" DefaultValue="https://localhost:8080/assets/icon-80.png" />
+        </bt:Images>
+        <bt:Urls>
+          <bt:Url id="taskpaneUrl" DefaultValue="https://localhost:8080/taskpane.html" />
+        </bt:Urls>
+        <bt:ShortStrings>
+          <bt:String id="groupLabel" DefaultValue="Phishing Detection" />
+          <bt:String id="buttonLabel" DefaultValue="Run Phishing Scan" />
+          <bt:String id="buttonTitle" DefaultValue="Scan Email" />
+        </bt:ShortStrings>
+        <bt:LongStrings>
+          <bt:String id="buttonDescription" DefaultValue="Runs the AI model to check for phishing indicators." />
+        </bt:LongStrings>
+      </Resources>
+    </VersionOverrides>
 
 </OfficeApp>
